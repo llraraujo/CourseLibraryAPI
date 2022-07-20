@@ -19,7 +19,7 @@ namespace CourseLibrary.API.Controllers
         public IActionResult GetAuthors()
         {
             var authors = _courseLibraryRepository.GetAuthors();
-            return new JsonResult(authors);
+            return Ok(authors); //changed JsonResult() to Ok() Method 
         }
 
         [HttpGet("{authorId}")] // or [HttpGet("{authorId:guid}")] Os dois pontos seguidos do tipo (guid) é para eliminar ambiguidades, ou seja, só irá aceitar objetos que podem ser convertidos para o tipo gui
@@ -27,7 +27,7 @@ namespace CourseLibrary.API.Controllers
         {
             var author = _courseLibraryRepository.GetAuthor(authorId);
             if(author == null) return NotFound();
-            return new JsonResult(author);
+            return Ok(author); //changed JsonResult() to Ok() Method 
         }
     }
 }
