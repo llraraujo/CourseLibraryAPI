@@ -23,6 +23,7 @@ namespace CourseLibrary.API.Controllers
         }
 
         [HttpGet()]
+        [HttpHead] // This will make the code be executed but without fill the response body. Used to get API information.
         public ActionResult<IEnumerable<AuthorDto>> GetAuthors() //Always Use ActionResult<T> instead of IActionResult if is possible.
         {
             var authors = _courseLibraryRepository.GetAuthors();
