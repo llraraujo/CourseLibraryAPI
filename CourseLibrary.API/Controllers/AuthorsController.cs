@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using CourseLibrary.API.Helpers;
 using AutoMapper;
 using CourseLibrary.API.ResourceParameters;
+using CourseLibrary.API.Entities;
 
 namespace CourseLibrary.API.Controllers
 {
@@ -35,12 +36,30 @@ namespace CourseLibrary.API.Controllers
             return Ok(_mapper.Map<IEnumerable<AuthorDto>>(authors)); //changed JsonResult() to Ok() Method. Used AutoMapper
         }
 
-        [HttpGet("{authorId}")] // or [HttpGet("{authorId:guid}")] Os dois pontos seguidos do tipo (guid) é para eliminar ambiguidades, ou seja, só irá aceitar objetos que podem ser convertidos para o tipo gui
-        public IActionResult GetAuthor(Guid authorId)
+        [HttpGet("{authorId}", Name ="GetAuthor")] // or [HttpGet("{authorId:guid}")] Os dois pontos seguidos do tipo (guid) é para eliminar ambiguidades, ou seja, só irá aceitar objetos que podem ser convertidos para o tipo gui
+        public ActionResult<AuthorDto> GetAuthor(Guid authorId)
         {
             var author = _courseLibraryRepository.GetAuthor(authorId);
             if(author == null) return NotFound();
             return Ok(_mapper.Map<AuthorDto>(author)); //changed JsonResult() to Ok() Method 
         }
+
+        [HttpPost]
+        public ActionResult<AuthorDto> CreatAuthor(AuthorForCreationDto author)
+        {
+            // if (author == null) return BadRequest(); No need this anymore because of the [ApiController] attribute
+            var authorEntity = _mapper.Map<Author>(author);
+
+            _courseLibraryRepository.AddAuthor(authorEntity); //Added to DbContext
+
+            _courseLibraryRepository.Save(); //Actually saves on the Database;
+
+            var authorToReturn = _mapper.Map<AuthorDto>(authorEntity);
+             
+            // CreateAtRoute( Route to refer to a single Resource, id of the the resource, value to response body) -> This Create a URI !
+            return CreatedAtRoute("GetAuthor", new {authorId = authorToReturn.Id }, authorToReturn);
+
+        }
+       
     }
 }

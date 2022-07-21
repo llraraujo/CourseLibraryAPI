@@ -17,6 +17,8 @@ namespace CourseLibrary.API.Profiles
             CreateMap<Author, AuthorDto>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}")) //This is called Projection
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.DateOfBirth.GetCurrentAge()));
+
+            CreateMap<AuthorForCreationDto, Author>();
         }
     }
 }
