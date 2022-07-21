@@ -1,6 +1,9 @@
-﻿using CourseLibrary.API.Services;
+﻿using CourseLibrary.API.Models;
+using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
+using CourseLibrary.API.Helpers;
 
 namespace CourseLibrary.API.Controllers
 {
@@ -16,10 +19,23 @@ namespace CourseLibrary.API.Controllers
         }
 
         [HttpGet()]
-        public IActionResult GetAuthors()
+        public ActionResult<IEnumerable<AuthorDto>> GetAuthors() //Always Use ActionResult<T> instead of IActionResult if is possible.
         {
             var authors = _courseLibraryRepository.GetAuthors();
-            return Ok(authors); //changed JsonResult() to Ok() Method 
+            var authorsDto = new List<AuthorDto>();
+
+            foreach(var author in authors)
+            {
+                authorsDto.Add(new AuthorDto()
+                {
+                    Id = author.Id,
+                    Name = $"{author.FirstName} {author.LastName}",
+                    MainCategory = author.MainCategory,
+                    Age = author.DateOfBirth.GetCurrentAge()
+                });
+            }
+
+            return Ok(authorsDto); //changed JsonResult() to Ok() Method 
         }
 
         [HttpGet("{authorId}")] // or [HttpGet("{authorId:guid}")] Os dois pontos seguidos do tipo (guid) é para eliminar ambiguidades, ou seja, só irá aceitar objetos que podem ser convertidos para o tipo gui
