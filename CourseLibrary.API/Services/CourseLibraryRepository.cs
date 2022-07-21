@@ -122,12 +122,30 @@ namespace CourseLibrary.API.Services
             return _context.Authors.ToList<Author>();
         }
 
-        public IEnumerable<Author> GetAuthors(string mainCategory)
+        public IEnumerable<Author> GetAuthors(string mainCategory, string searchQuery)
         {
-            if (string.IsNullOrWhiteSpace(mainCategory)) return GetAuthors();
+            if (string.IsNullOrWhiteSpace(mainCategory) && string.IsNullOrWhiteSpace(searchQuery)) return GetAuthors();
 
-            mainCategory = mainCategory.Trim();
-            return _context.Authors.Where(aut => aut.MainCategory == mainCategory).ToList();
+            //Deferred Execution (This code mounts a Query command to send to the Database and will be executed only the query is iterated over (ToList(), ToArray()...). 
+            // IQueryable creates an expression tree;
+            var collection = _context.Authors as IQueryable<Author>;
+
+            if (!string.IsNullOrWhiteSpace(mainCategory))
+            {
+                mainCategory = mainCategory.Trim();
+                collection = collection.Where(aut => aut.MainCategory == mainCategory);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                searchQuery = searchQuery.Trim();
+                collection = collection.Where(aut => aut.MainCategory.Contains(searchQuery) || aut.FirstName.Contains(searchQuery) || aut.LastName.Contains(searchQuery));
+
+            }
+
+            //Here is when the Query Expression is send to the database and executed
+            return collection.ToList();
+
         }
 
         public IEnumerable<Author> GetAuthors(IEnumerable<Guid> authorIds)

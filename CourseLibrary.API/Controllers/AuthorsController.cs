@@ -24,11 +24,11 @@ namespace CourseLibrary.API.Controllers
 
         [HttpGet()]
         [HttpHead] // This will make the code be executed but without fill the response body. Used to get API information.
-        public ActionResult<IEnumerable<AuthorDto>> GetAuthors(string mainCategory) //Always Use ActionResult<T> instead of IActionResult if is possible. 
+        public ActionResult<IEnumerable<AuthorDto>> GetAuthors(string mainCategory, string searchQuery) //Always Use ActionResult<T> instead of IActionResult if is possible. 
             // To implemente QueryParams we can use the same property name for the function param. or can use ([FromQuery] string mainCategory). If the name is the same
             // as the property we can ommit the '[FromQuery]'
         {
-            var authors = _courseLibraryRepository.GetAuthors(mainCategory);
+            var authors = _courseLibraryRepository.GetAuthors(mainCategory, searchQuery);
                         
 
             return Ok(_mapper.Map<IEnumerable<AuthorDto>>(authors)); //changed JsonResult() to Ok() Method. Used AutoMapper
