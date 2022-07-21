@@ -1,5 +1,6 @@
 ﻿using CourseLibrary.API.DbContexts;
-using CourseLibrary.API.Entities; 
+using CourseLibrary.API.Entities;
+using CourseLibrary.API.ResourceParameters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -122,23 +123,28 @@ namespace CourseLibrary.API.Services
             return _context.Authors.ToList<Author>();
         }
 
-        public IEnumerable<Author> GetAuthors(string mainCategory, string searchQuery)
+        public IEnumerable<Author> GetAuthors(AuthorsResourceParameters authorsResourceParams)
         {
-            if (string.IsNullOrWhiteSpace(mainCategory) && string.IsNullOrWhiteSpace(searchQuery)) return GetAuthors();
+
+            if (authorsResourceParams == null) throw new ArgumentNullException(nameof(authorsResourceParams));
+
+            if (string.IsNullOrWhiteSpace(authorsResourceParams.MainCategory) && string.IsNullOrWhiteSpace(authorsResourceParams.SearchQuery)) return GetAuthors();
 
             //Deferred Execution (This code mounts a Query command to send to the Database and will be executed only the query is iterated over (ToList(), ToArray()...). 
             // IQueryable creates an expression tree;
             var collection = _context.Authors as IQueryable<Author>;
 
-            if (!string.IsNullOrWhiteSpace(mainCategory))
+            if (!string.IsNullOrWhiteSpace(authorsResourceParams.MainCategory))
             {
-                mainCategory = mainCategory.Trim();
+                var mainCategory = authorsResourceParams.MainCategory.Trim();
+                               
                 collection = collection.Where(aut => aut.MainCategory == mainCategory);
             }
 
-            if (!string.IsNullOrWhiteSpace(searchQuery))
+            if (!string.IsNullOrWhiteSpace(authorsResourceParams.SearchQuery))
             {
-                searchQuery = searchQuery.Trim();
+                var searchQuery = authorsResourceParams.SearchQuery.Trim();
+              
                 collection = collection.Where(aut => aut.MainCategory.Contains(searchQuery) || aut.FirstName.Contains(searchQuery) || aut.LastName.Contains(searchQuery));
 
             }
