@@ -19,7 +19,7 @@ namespace CourseLibrary.API.Controllers
         public AuthorsController(ICourseLibraryRepository courseLibraryRepository, IMapper mapper)
         {
             _courseLibraryRepository = courseLibraryRepository ?? throw new ArgumentNullException(nameof(courseLibraryRepository));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(courseLibraryRepository));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         [HttpGet()]
