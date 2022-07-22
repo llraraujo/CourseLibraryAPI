@@ -4,7 +4,9 @@ using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +30,49 @@ namespace CourseLibrary.API
             services.AddControllers(setupAction =>
             {
                 setupAction.ReturnHttpNotAcceptable = true;
-            }).AddXmlDataContractSerializerFormatters(); // configured to return xml data when accept header is define to xml. JSON type is returned as default data-type.
+            }).AddXmlDataContractSerializerFormatters() // configured to return xml data when accept header is define to xml. JSON type is returned as default data-type.
+              .ConfigureApiBehaviorOptions(setupAction => 
+              {
+                  setupAction.InvalidModelStateResponseFactory = context =>
+                  {
+                      // create a problem details object
+                      var problemsDetailsFactory = context.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+
+                      var problemDetails = problemsDetailsFactory.CreateValidationProblemDetails(context.HttpContext, context.ModelState);
+
+                      // add additional info not added by default
+                      problemDetails.Detail = "See the errors field for details.";
+                      problemDetails.Instance = context.HttpContext.Request.Path;
+
+                      // find out witch status code to use
+                      var actionExecutingContext = context as Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext;
+
+                      // if there are ModelState errors & all arguments were correctly
+                      // found/parsed we are dealing with validation errors
+                      if ((context.ModelState.ErrorCount > 0) && (actionExecutingContext?.ActionArguments.Count == context.ActionDescriptor.Parameters.Count))
+                      {
+                          problemDetails.Type = "https://courselibrary.com/modelvalidationproblem";
+                          problemDetails.Status = StatusCodes.Status422UnprocessableEntity;
+                          problemDetails.Title = "One or more validation erros occurred.";
+
+                          return new UnprocessableEntityObjectResult(problemDetails)
+                          {
+                              ContentTypes = { "application/problem+json" }
+                          };
+                      }
+                      // if one of the arguments wasn't correctly found / couldn't be parsed
+                      // we're dealing with null/unparseable input
+
+                      problemDetails.Status = StatusCodes.Status400BadRequest;
+                      problemDetails.Title = "One or more erros on input occurred.";
+
+                      return new BadRequestObjectResult(problemDetails)
+                      {
+                          ContentTypes = { "application/problem+json" }
+                      };
+
+                  };
+              });
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             
