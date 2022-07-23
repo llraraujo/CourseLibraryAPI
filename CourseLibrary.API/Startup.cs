@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json.Serialization;
 using System;
 
 namespace CourseLibrary.API
@@ -30,8 +31,12 @@ namespace CourseLibrary.API
             services.AddControllers(setupAction =>
             {
                 setupAction.ReturnHttpNotAcceptable = true;
-            }).AddXmlDataContractSerializerFormatters() // configured to return xml data when accept header is define to xml. JSON type is returned as default data-type.
-              .ConfigureApiBehaviorOptions(setupAction => 
+            })
+            .AddNewtonsoftJson(setupAction => {
+                setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+             })
+            .AddXmlDataContractSerializerFormatters() // configured to return xml data when accept header is define to xml. JSON type is returned as default data-type.
+            .ConfigureApiBehaviorOptions(setupAction => 
               {
                   setupAction.InvalidModelStateResponseFactory = context =>
                   {
