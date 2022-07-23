@@ -54,7 +54,7 @@ namespace CourseLibrary.API
 
                       // if there are ModelState errors & all arguments were correctly
                       // found/parsed we are dealing with validation errors
-                      if ((context.ModelState.ErrorCount > 0) && (actionExecutingContext?.ActionArguments.Count == context.ActionDescriptor.Parameters.Count))
+                      if ((context.ModelState.ErrorCount > 0) || (actionExecutingContext?.ActionArguments.Count == context.ActionDescriptor.Parameters.Count))
                       {
                           problemDetails.Type = "https://courselibrary.com/modelvalidationproblem";
                           problemDetails.Status = StatusCodes.Status422UnprocessableEntity;

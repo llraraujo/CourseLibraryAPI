@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 using CourseLibrary.API.Entities;
 using CourseLibrary.API.Models;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CourseLibrary.API.Controllers
 {
@@ -109,12 +113,37 @@ namespace CourseLibrary.API.Controllers
 
             var coursesFromAuthorFromRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
 
-            if (coursesFromAuthorFromRepo == null) return NotFound();
+            if (coursesFromAuthorFromRepo == null)
+            {
+                var courseDto = new CourseForUpdateDto();
+                patchDocument.ApplyTo(courseDto, ModelState);
+
+                if (!TryValidateModel(courseDto)) // TryValidateModel() This trigger validation of the specified model
+                {
+                    return ValidationProblem(ModelState);
+                }
+
+                var courseToAdd = _mapper.Map<Course>(courseDto);
+                courseToAdd.Id = courseId;
+
+                _courseLibraryRepository.AddCourse(authorId, courseToAdd);
+
+                var courseToReturn = _mapper.Map<CourseDto>(courseToAdd);
+
+                _courseLibraryRepository.Save();
+
+                return CreatedAtRoute("GetCourseForAuthor", new { authorId = authorId, courseId = courseToReturn.Id }, courseToReturn);
+            }
 
             var courseToPatch = _mapper.Map<CourseForUpdateDto>(coursesFromAuthorFromRepo);
 
             // add validation
-            patchDocument.ApplyTo(courseToPatch);
+            patchDocument.ApplyTo(courseToPatch, ModelState);
+
+            if (!TryValidateModel(courseToPatch)) // TryValidateModel() This trigger validation of the specified model
+            {
+                return ValidationProblem(ModelState);
+            }
 
             _mapper.Map(courseToPatch, coursesFromAuthorFromRepo); // mapping to an Entity again
 
@@ -126,6 +155,15 @@ namespace CourseLibrary.API.Controllers
 
 
 
+        }
+
+        // This code execute our custom invalid model state configured in startup class
+        public override ActionResult ValidationProblem([ActionResultObjectValue] ModelStateDictionary modelStateDictionary )
+        {
+            var options = HttpContext.RequestServices.GetRequiredService<IOptions<ApiBehaviorOptions>>();
+
+            return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
+            
         }
     }
 }
