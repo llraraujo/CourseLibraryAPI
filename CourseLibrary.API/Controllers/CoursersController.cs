@@ -57,5 +57,33 @@ namespace CourseLibrary.API.Controllers
                 courseToReturn
                 );
         }
+
+        [HttpPut("{courseId}")]
+        public ActionResult UpdateCourseForAuthor(Guid authorId, Guid courseId, CourseForUpdateDto course)
+        {
+
+            if (!_courseLibraryRepository.AuthorExists(authorId)) return NotFound();
+
+            var courseForAuthorFromRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
+
+            if (courseForAuthorFromRepo == null) return NotFound();
+
+            // We must not use the same dto for creation to update even if this models have the same properties. We do this because the same rules applied for POST
+            // are not he same for PUT
+
+            // map the entity to a CourseForUpdateDto
+            // apply the updated field values to that dto
+            // map the CourseForUpdateDto back to an Entity
+
+            _mapper.Map(course, courseForAuthorFromRepo);
+
+            _courseLibraryRepository.UpdateCourse(courseForAuthorFromRepo);
+
+            _courseLibraryRepository.Save();
+
+            return NoContent();
+
+
+        }
     }
 }
