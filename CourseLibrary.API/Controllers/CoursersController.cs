@@ -157,6 +157,26 @@ namespace CourseLibrary.API.Controllers
 
         }
 
+        [HttpDelete("{courseId}")]
+
+        public ActionResult DeleteCourseForAuthor(Guid authorId, Guid courseId)
+        {
+            if (!_courseLibraryRepository.AuthorExists(authorId)) return NotFound();
+
+            var courseFromAuthorFromRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
+
+            if(courseFromAuthorFromRepo == null)
+            {
+                return NotFound();
+            }
+
+            _courseLibraryRepository.DeleteCourse(courseFromAuthorFromRepo);
+            _courseLibraryRepository.Save();
+
+            return NoContent();
+        }
+
+
         // This code execute our custom invalid model state configured in startup class
         public override ActionResult ValidationProblem([ActionResultObjectValue] ModelStateDictionary modelStateDictionary )
         {
